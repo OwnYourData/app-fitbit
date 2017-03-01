@@ -1,0 +1,25 @@
+{
+        "name":"App Vorlage",
+        "identifier":"eu.ownyourdata.template",
+        "appUrl":"https://your.server.com/app",
+        "mobileUrl":"https://your.server.com/mobile-app",
+        "infoUrl":"https://your.server.com/app-infos",
+        "type":"external",
+        "description":"ein R-Template für OYD Apps",
+        "permissions":[
+                "eu.ownyourdata.info:read",
+                "eu.ownyourdata.info:write",
+                "eu.ownyourdata.info:update",
+                "eu.ownyourdata.template.*:read",
+                "eu.ownyourdata.template.*:write",
+                "eu.ownyourdata.template.*:update",
+                "eu.ownyourdata.template.*:delete",
+                "eu.ownyourdata.scheduler:read",
+                "eu.ownyourdata.scheduler:write",
+                "eu.ownyourdata.scheduler:update",
+                "eu.ownyourdata.scheduler:delete",
+                "eu.ownyourdata.scheduler.email_config:read",
+                "eu.ownyourdata.scheduler.email_config:write",
+                "eu.ownyourdata.scheduler.email_config:update",
+                "eu.ownyourdata.scheduler.email_config:delete" ]
+}
