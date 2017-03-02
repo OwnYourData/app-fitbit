@@ -9,8 +9,10 @@ appSource <- function(){
                        # uiOutput('desktopUiSourceItemsRender')
                        tabsetPanel(
                                type='tabs',
-                               tabPanel('Tab1',
-                                        p('hello world')
+                               tabPanel('Connect to Fitbit',
+                                        textInput('fitbit_key', 'ID'),
+                                        textInput('fitbit_secret', 'Secret'),
+                                        actionButton('fitbit_register', 'Verbinden')
                                )
                        )
                 )
