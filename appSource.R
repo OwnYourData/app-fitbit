@@ -12,7 +12,8 @@ appSource <- function(){
                                tabPanel('Connect to Fitbit',
                                         textInput('fitbit_key', 'ID'),
                                         textInput('fitbit_secret', 'Secret'),
-                                        actionButton('fitbit_register', 'Verbinden')
+                                        actionButton('fitbit_register', 'Verbinden'),
+                                        htmlOutput('link_fitbit')
                                )
                        )
                 )

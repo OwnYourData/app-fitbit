@@ -30,7 +30,20 @@ appStart <- function(){
 
 }
 
+output$link_fitbit <- renderText({
+        input$fitbit_key
+        input$fitbit_secret
+        fl <- paste0('https://www.fitbit.com/oauth2/authorize?',
+                     'response_type=code&',
+                     'client_id=', as.character(input$fitbit_key), '&',
+                     '&redirect_uri=https%3A%2F%2Ffitbit.datentresor.org&',
+                     'scope=activity&',
+                     'expires_in=86400')
+        paste0("<a href='", fl, "', target='_blank'>Fitbit</a>")
+})
+
 observeEvent(input$fitbit_register, {
+        pars <- parseQueryString(session$clientData$url_search)
         key       <- input$fitbit_key
         secret    <- input$fitbit_secret
         request   <- 'https://api.fitbit.com/oauth2/token'

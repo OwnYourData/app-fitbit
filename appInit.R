@@ -4,6 +4,8 @@
 observe({
         urlParams <- parseQueryString(session$clientData$url_search)
         urlParamExist <- FALSE
+        codeExist <- FALSE
+        fitbit_code <- ''
         if(is.null(urlParams[['PIA_URL']])){
                 piaUrl <<- input$store$pia_url
         } else {
@@ -21,6 +23,10 @@ observe({
         } else {
                 appSecret <<- urlParams[['APP_SECRET']]
                 urlParamExist <- TRUE
+        }
+        if(!is.null(urlParams[['code']])){
+                fitbit_code <- urlParams[['code']]
+                codeExist <- TRUE
         }
         
         app <- setupApp(piaUrl, appKey, appSecret)
@@ -44,10 +50,8 @@ observe({
                                             content = 'Beim Öffnen wurden neue Verbindungsdaten zum Datentresor übergeben und gespeichert.')
                         }
                 }
-        } else {
-                closeAlert(session, 'myUrlStatus')
         }
-        if(length(all.equal(app, logical(0)))>1){
+        if(length(app) > 0){
                 closeAlert(session, 'myPiaStatus')
                 updateTextInput(session, 'modalPiaUrl', value=piaUrl)
                 updateTextInput(session, 'modalPiaId', value=appKey)
@@ -72,6 +76,17 @@ observe({
                 output$currentToken <- renderText('')
         }
         appStart()
+        
+        if(codeExist & length(app) > 0){
+                url <- itemsUrl(app[['url']],
+                                paste0(app[['key']], 
+                                       '.token'))
+                data <- list(
+                        code = fitbit_code,
+                        '_oydRepoName' = 'Fitbit Authorization'
+                )
+                writeItem(app, url, data)
+        }
 })
 
 output$connectError <- renderUI({
