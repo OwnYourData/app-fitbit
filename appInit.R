@@ -33,7 +33,11 @@ observe({
         if(urlParamExist){
                 if(is.null(input$store$pia_url) |
                    is.null(input$store$app_key) |
-                   is.null(input$store$app_secret)){
+                   is.null(input$store$app_secret))
+                {
+                        updateStore(session, "pia_url", piaUrl)
+                        updateStore(session, "app_key", appKey)
+                        updateStore(session, "app_secret", appSecret)
                         closeAlert(session, 'myUrlStatus')
                 } else {
                         if((input$store$pia_url == urlParams[['PIA_URL']]) &
