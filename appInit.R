@@ -83,7 +83,7 @@ observe({
         
         if(codeExist & length(app) > 0){
                 url <- itemsUrl(app[['url']],
-                                paste0(app[['key']], 
+                                paste0(app[['app_key']], 
                                        '.token'))
                 data <- list(
                         code = fitbit_code,
