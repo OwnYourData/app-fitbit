@@ -31,15 +31,32 @@ appStart <- function(){
 }
 
 output$link_fitbit <- renderText({
-        input$fitbit_key
-        input$fitbit_secret
-        fl <- paste0('https://www.fitbit.com/oauth2/authorize?',
-                     'response_type=code&',
-                     'client_id=', as.character(input$fitbit_key), '&',
-                     '&redirect_uri=https%3A%2F%2Ffitbit.datentresor.org&',
-                     'scope=activity&',
-                     'expires_in=86400')
-        paste0("<a href='", fl, "', target='_blank'>Fitbit</a>")
+        fitbit_key <- input$fitbit_key
+        fitbit_secret <- input$fitbit_secret
+        app <- currApp()
+        if((length(app) > 0) & 
+           (nchar(fitbit_key) > 0) &
+           (nchar(fitbit_secret) > 0)){
+                url <- itemsUrl(app[['url']],
+                                paste0(app[['app_key']], 
+                                       '.token'))
+                data <- list(
+                        key = fitbit_key,
+                        secret = fitbit_secret,
+                        '_oydRepoName' = 'Fitbit Authorization'
+                )
+                writeItem(app, url, data)
+                
+                fl <- paste0('https://www.fitbit.com/oauth2/authorize?',
+                             'response_type=code&',
+                             'client_id=', as.character(input$fitbit_key), '&',
+                             '&redirect_uri=https%3A%2F%2Ffitbit.datentresor.org&',
+                             'scope=activity&',
+                             'expires_in=86400')
+                paste0("<a href='", fl, "', target='_blank'>Fitbit</a>")
+        } else {
+                'derzeit keine Verbindung zu Fitbit'
+        }
 })
 
 observeEvent(input$fitbit_register, {
