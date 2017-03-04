@@ -4,15 +4,19 @@
 # source("uiSourceItemConfig.R")
 
 appSource <- function(){
-        fluidRow(
-                column(12,
-                       # uiOutput('desktopUiSourceItemsRender')
-                       tabsetPanel(
-                               type='tabs',
-                               tabPanel('Connect to Fitbit',
-                                        textInput('fitbit_key', 'ID'),
+       tabsetPanel(
+               type='tabs',
+               tabPanel('Verbindung zu Fitbit',
+                        fluidRow(
+                                column(2,
+                                       img(src='fitbit.png',
+                                           width='70px',
+                                           style='margin:20px')),
+                                column(10,
+                                       textInput('fitbit_key', 'ID'),
                                         textInput('fitbit_secret', 'Secret'),
-                                        htmlOutput('link_fitbit')
+                                        htmlOutput('link_fitbit'), br(),
+                                        tags$div(id = 'disonnectFitbitPlaceholder')
                                )
                        )
                 )

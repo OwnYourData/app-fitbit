@@ -114,6 +114,21 @@ observe({
                                 refresh_token = content(r)$refresh_token
                         )
                         updateItem(app, url, data, fa$id)
+                        
+                        # write entry in scheduler to collect data on a daily basis
+                        replace <- list()
+                        writeSchedulerRscriptReference(app,
+                                                       appTitle,
+                                                       'Fitbit Schritte',
+                                                       '2 2 * * *',
+                                                       replace)
+                        
+                        # inform user about successful completion
+                        createAlert(session, 'urlStatus', alertId = 'myConnectStatus',
+                                    style = 'success', append = TRUE,
+                                    title = 'Verbindung zu Fitbit',
+                                    content = 'Die Verbindung zu Fitbit wurde erfolgreich eingerichtet.')
+                        
                 }
         }
 })
