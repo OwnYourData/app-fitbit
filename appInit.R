@@ -85,28 +85,36 @@ observe({
                 url <- itemsUrl(app[['url']],
                                 paste0(app[['app_key']], 
                                        '.token'))
-                credentials <- readItems(app, url)
-                key <- credentials[1, 'key']
-                secret <- credentials[1, 'secret']
-                headers <- c('Accept'          = '*/*',
-                             'Content-Type'    = 'application/x-www-form-urlencoded',
-                             'Authorization'   = paste('Basic',
-                                                       jsonlite::base64_enc(paste0(key, ':', secret))))
-                # https://dev.fitbit.com/apps/oauthinteractivetutorial
-                r <- httr::POST('https://api.fitbit.com/oauth2/token',
-                                body = list(
-                                        code         = fitbit_code,
-                                        clientId     = key,
-                                        grant_type   = 'authorization_code',
-                                        scope        = 'activity%20sleep%20weight',
-                                        redirect_uri = 'https://fitbit.datentresor.org'),
-                                add_headers(.headers = headers),
-                                encode='form')
-                data <- list(
-                        token = content(r)$access_token,
-                        refresh_token = content(r)$refresh_token
-                )
-                writeItem(app, url, data)
+                fa <- readItems(app, url)
+                if(nrow(fa) > 1){
+                        lapply(fa$id, 
+                               function(x) deleteItem(app, url, x))
+                        fa <- data.frame()
+                }
+                if(nrow(fa) == 1){
+                        key <- fa$key
+                        secret <- fa$secret
+                        headers <- c('Accept'          = '*/*',
+                                     'Content-Type'    = 'application/x-www-form-urlencoded',
+                                     'Authorization'   = paste('Basic',
+                                                               jsonlite::base64_enc(paste0(key, ':', secret))))
+                        # https://dev.fitbit.com/apps/oauthinteractivetutorial
+                        r <- httr::POST('https://api.fitbit.com/oauth2/token',
+                                        body = list(
+                                                code         = fitbit_code,
+                                                clientId     = key,
+                                                grant_type   = 'authorization_code',
+                                                redirect_uri = 'https://fitbit.datentresor.org'),
+                                        add_headers(.headers = headers),
+                                        encode='form')
+                        data <- list(
+                                key = key,
+                                secret = secret,
+                                access_token = content(r)$access_token,
+                                refresh_token = content(r)$refresh_token
+                        )
+                        updateItem(app, url, data, fa$id)
+                }
         }
 })
 

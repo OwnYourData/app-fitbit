@@ -27,12 +27,46 @@ repoData <- function(repo){
 
 # anything that should run only once during startup
 appStart <- function(){
-
+        app <- currApp()
+        key <- ''
+        secret <- ''
+        if(length(app) > 0){
+                url <- itemsUrl(app[['url']],
+                                paste0(app[['app_key']], 
+                                       '.token'))
+                fa <- readItems(app, url)
+                if(nrow(fa) > 1){
+                        lapply(fa$id, 
+                               function(x) deleteItem(app, url, x))
+                        fa <- data.frame()
+                }
+                if(nrow(fa) == 1){
+                        key <- fa$key
+                        secret <- fa$secret
+                }
+        }
+        if(nchar(key) > 0){
+                updateTextInput(session, 'fitbit_key',
+                                value = key)
+        } else {
+                updateTextInput(session, 'fitbit_key',
+                                value = '')
+        }
+        if(nchar(secret) > 0){
+                updateTextInput(session, 'fitbit_secret',
+                                value = secret)
+        } else {
+                updateTextInput(session, 'fitbit_secret',
+                                value = '')
+        }
 }
 
 output$link_fitbit <- renderText({
         fitbit_key <- input$fitbit_key
         fitbit_secret <- input$fitbit_secret
+        code <- ''
+        access_token <- ''
+        refresh_token <- ''
         app <- currApp()
         if((length(app) > 0) & 
            (nchar(fitbit_key) > 0) &
@@ -40,57 +74,42 @@ output$link_fitbit <- renderText({
                 url <- itemsUrl(app[['url']],
                                 paste0(app[['app_key']], 
                                        '.token'))
+                fa <- readItems(app, url)
+                if(nrow(fa) > 1){
+                        lapply(fa$id, 
+                               function(x) deleteItem(app, url, x))
+                        fa <- data.frame()
+                }
+                if(nrow(fa) == 1){
+                        if('access_token' %in% colnames(fa)){
+                                access_token <- fa$access_token
+                        }
+                        if('refresh_token' %in% colnames(fa)){
+                                refresh_token <- fa$refresh_token
+                        }
+                }
                 data <- list(
                         key = fitbit_key,
                         secret = fitbit_secret,
+                        access_token = access_token,
+                        refresh_token = refresh_token,
                         '_oydRepoName' = 'Fitbit Authorization'
                 )
-                writeItem(app, url, data)
+                if(nrow(fa) == 0){
+                        writeItem(app, url, data)
+                } else {
+                        updateItem(app, url, data, fa$id)
+                }
                 
+                # https://dev.fitbit.com/apps/oauthinteractivetutorial
                 fl <- paste0('https://www.fitbit.com/oauth2/authorize?',
                              'response_type=code&',
                              'client_id=', as.character(input$fitbit_key), '&',
                              '&redirect_uri=https%3A%2F%2Ffitbit.datentresor.org&',
                              'scope=activity&',
                              'expires_in=86400')
-                paste0("<a href='", fl, "', target='_blank'>Fitbit</a>")
+                paste0("<a href='", fl, "', target='_blank', class='btn btn-default'>mit Fitbit verbinden</a>")
         } else {
                 'derzeit keine Verbindung zu Fitbit'
-        }
-})
-
-observeEvent(input$fitbit_register, {
-        pars <- parseQueryString(session$clientData$url_search)
-        key       <- input$fitbit_key
-        secret    <- input$fitbit_secret
-        request   <- 'https://api.fitbit.com/oauth2/token'
-        authorize <- 'https://www.fitbit.com/oauth2/authorize'
-        access    <- 'https://api.fitbit.com/oauth2/token'
-        endpoint  <- httr::oauth_endpoint(request, authorize, access)
-        myapp     <- httr::oauth_app("oyd_fitbit", key, secret)
-        scope     <- c("sleep", "activity", "weight")
-        token     <- httr::oauth2.0_token(endpoint, myapp, scope=scope, 
-                                          use_basic_auth=TRUE, cache=FALSE)
-        token_serial <- rawToChar(serialize(token, NULL, ascii = TRUE))
-        app <- currApp()
-        if(length(app) > 0){
-                url <- itemsUrl(app[['url']], 
-                                paste0(app[['app_key']],
-                                       '.fitbit_token'))
-                recs <- readItems(app, url)
-                if(nrow(recs) > 1){
-                        lapply(recs$id, 
-                               function(x) deleteItem(app, url, x))
-                        recs <- data.frame()
-                        
-                }
-                data <- list(
-                        value = x,
-                        '_oydRepoName' = 'Fitbit Token')
-                if(nrow(recs) == 1){
-                        updateItem(app, url, data, recs$id)
-                } else {
-                        writeItem(app, url, data)
-                }
         }
 })
