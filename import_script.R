@@ -1,0 +1,157 @@
+defaultHeaders <- function(token) {
+  c('Accept'='*/*', 'Content-Type'='application/json', 'Authorization'=paste('Bearer', token))
+}
+itemsUrl <- function(url, repo_name) {
+  paste0(url, '/api/repos/', repo_name, '/items')
+}
+getToken <- function(pia_url, app_key, app_secret) {
+  auth_url <- paste0(pia_url, '/oauth/token')
+  optTimeout <- RCurl::curlOptions(connecttimeout = 10)
+  response <- tryCatch(
+    RCurl::postForm(auth_url, client_id = app_key, client_secret = app_secret, grant_type = 'client_credentials', .opts = optTimeout),
+    error = function(e) { return(NA) })
+  if (is.na(response)) {
+    return(NA)
+  } else {
+    if(jsonlite::validate(response[1])){
+      return(rjson::fromJSON(response[1])$access_token)
+    } else {
+      return(NA)
+    }
+  }
+}
+setupApp <- function(pia_url, app_key, app_secret) {
+  app_token <- getToken(pia_url, app_key, app_secret)
+  if(is.na(app_token)){
+    vector()
+  } else {
+    c('url' = pia_url, 'app_key' = app_key, 'app_secret' = app_secret, 'token' = app_token)
+  }
+}
+r2d <- function(response){
+  if (is.na(response)) {
+    data.frame()
+  } else {
+    if (nchar(response) > 0) {
+      retVal <- rjson::fromJSON(response)
+      if(length(retVal) == 0) {
+        data.frame()
+      } else {
+        if ('error' %in% names(retVal)) {
+          data.frame()
+        } else {
+          if (!is.null(retVal$message)) {
+            if (retVal$message == 
+                'error.accessDenied') {
+              data.frame()
+            } else {
+              # convert list to data.frame
+              do.call(bind_rows, lapply(retVal, function(x) data.frame(t(sapply(x,c)), stringsAsFactors = FALSE)))
+            }
+          } else {
+            do.call(bind_rows, lapply(retVal, function(x) data.frame(t(sapply(x,c)), stringsAsFactors = FALSE)))
+          }
+        }
+      }
+    } else {
+      data.frame()
+    }
+  }
+}
+readItems <- function(app, repo_url) {
+  if (length(app) == 0) {
+    data.frame()
+    return()
+  }
+  headers <- defaultHeaders(app[['token']])
+  url_data <- paste0(repo_url, '?size=2000')
+  header <- RCurl::basicHeaderGatherer()
+  doc <- tryCatch(
+    RCurl::getURI(url_data, .opts=list(httpheader = headers), headerfunction = header$update),
+    error = function(e) { return(NA) })
+  response <- NA
+  respData <- data.frame()
+  if(!is.na(doc)){
+    recs <- tryCatch(
+      as.integer(header$value()[['X-Total-Count']]),
+      error = function(e) { return(0)})
+    if(recs > 2000) {
+      for(page in 0:floor(recs/2000)){
+        url_data <- paste0(repo_url, '?page=', page, '&size=2000')
+        response <- tryCatch(
+          RCurl::getURL(url_data, .opts=list(httpheader=headers)),
+          error = function(e) { return(NA) })
+        subData <- r2d(response)
+        if(nrow(respData)>0){
+          respData <- rbind(respData, subData)
+        } else {
+          respData <- subData
+        }
+      }
+    } else {
+      response <- tryCatch(
+        RCurl::getURL(url_data, .opts=list(httpheader = headers)),
+        error = function(e) { return(NA) })
+      respData <- r2d(response)
+    }
+  }
+  respData
+}
+writeItem <- function(app, repo_url, item) {
+  headers <- defaultHeaders(app[['token']])
+  data <- rjson::toJSON(item)
+  response <- tryCatch(
+    RCurl::postForm(repo_url, .opts=list(httpheader = headers, postfields = data)),
+    error = function(e) { 
+      return(NA) })
+  response
+}
+updateItem <- function(app, repo_url, item, id) {
+  headers <- defaultHeaders(app[['token']])
+  item <- c(item, c(id=as.numeric(id)))
+  data <- rjson::toJSON(item)
+  response <- tryCatch(
+    RCurl::postForm(repo_url, .opts=list(httpheader = headers, postfields = data)),
+    error = function(e) { return(NA) })
+  response
+}
+deleteItem <- function(app, repo_url, id){
+  headers <- defaultHeaders(app[['token']])
+  item_url <- paste0(repo_url, '/', id)
+  response <- tryCatch(
+    httr::DELETE(item_url, add_headers(headers)),
+    error = function(e) { return(NA) })
+  response
+}
+
+pia_url <- '[pia_url]'
+app_key <- '[app_key]'
+app_secret <- '[app_secret]'
+app <- setupApp(pia_url, app_key, app_secret)
+fa_url <- itemsUrl(pia_url, 'eu.ownyourdata.fitbit.token')
+fa <- readItems(app, fa_url)
+if(nrow(fa) == 1){
+  key <- fa$key
+  secret <- fa$secret
+  headers <- c('Accept'='*/*', 'Content-Type'='application/x-www-form-urlencoded', 'Authorization'=paste('Basic', jsonlite::base64_enc(paste0(key, ':', secret))))
+  r <- httr::POST('https://api.fitbit.com/oauth2/token', body=list(grant_type='refresh_token', refresh_token=fa$refresh_token), add_headers(.headers=headers), encode='form')
+  data <- list(key=key, secret=secret, access_token=content(r)$access_token, refresh_token=content(r)$refresh_token)
+  updateItem(app, fa_url, data, fa$id)
+  access_token <- content(r)$access_token
+  url <- itemsUrl(pia_url, 'eu.ownyourdata.fitbit.steps')
+  pia_data <- readItems(app, url)
+  pia_data <- as.data.frame(lapply(pia_data, unlist))
+  resp <- GET('https://api.fitbit.com/1/user/-/activities/steps/date/today/1m.json', add_headers(.headers = defaultHeaders(access_token)))
+  fit_data <- jsonlite::fromJSON(httr::content(resp, as='text'))[[1]]
+  colnames(fit_data) <- c('date', 'value')
+  df <- merge(pia_data, fit_data, by='date', all=TRUE)
+  df <- df[df$value.y > 0, ]
+  apply(df, 1, function(x){
+    data <- list(date=as.character(x['date']), value=as.integer(x['value.y']), '_oydRepoName'='Schritte')
+    if(is.na(x['id'])){
+      writeItem(app, url, data)
+    } else {
+      updateItem(app, url, data, x['id'])
+    }
+  })
+}
