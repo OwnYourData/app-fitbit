@@ -110,19 +110,19 @@ output$link_fitbit <- renderText({
                         if('refresh_token' %in% colnames(fa)){
                                 refresh_token <- fa$refresh_token
                         }
-                }
-                if((fitbit_key == fa$key) &
-                   (fitbit_secret == fa$secret) &
-                   (nchar(access_token) > 0) &
-                   (nchar(refresh_token) > 0))
-                {
-                        insertUI(
-                                selector = '#disonnectFitbitPlaceholder',
-                                ui = actionButton('disonnectFitbit', 'Verbindung zu Fitbit trennen', 
-                                                  icon('chain-broken'))
-                        )
-                        
-                        'erfolgreich mit Fitbit verbunden'        
+                        if((fitbit_key == fa$key) &
+                           (fitbit_secret == fa$secret) &
+                           (nchar(access_token) > 0) &
+                           (nchar(refresh_token) > 0))
+                        {
+                                insertUI(
+                                        selector = '#disonnectFitbitPlaceholder',
+                                        ui = actionButton('disonnectFitbit', 'Verbindung zu Fitbit trennen', 
+                                                          icon('chain-broken'))
+                                )
+                                
+                                'erfolgreich mit Fitbit verbunden'
+                        }
                 } else {
                         data <- list(
                                 key = fitbit_key,

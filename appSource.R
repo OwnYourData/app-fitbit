@@ -6,7 +6,7 @@
 appSource <- function(){
        tabsetPanel(
                type='tabs',
-               tabPanel('Verbindung zu Fitbit',
+               tabPanel('Verbindung zu Fitbit', br(),
                         fluidRow(
                                 column(2,
                                        img(src='fitbit.png',
