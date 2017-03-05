@@ -110,27 +110,23 @@ currDataSelection <- reactive({
         data
 })
 
-output$lineChart <- renderPlotly({
+output$barChart <- renderPlotly({
         data <- currDataSelection()
         pdf(NULL)
         outputPlot <- plotly_empty()
         data$val <- as.numeric(data$value)
         if(nrow(data) > 0){
-                outputPlot <- plot_ly() %>%
-                        add_lines(x = as.Date(data$date),
-                                  y = data$val,
-                                  line=list(
-                                          width = 3,
-                                          shape = 'spline'),
-                                  name='') %>%
-                        add_markers(x = as.Date(data$date), 
-                                    y = data$val,
-                                    marker=list(color='blue'),
-                                    name='') %>%
-                        layout( title = '',
-                                showlegend = FALSE,
-                                margin = list(l = 80, r = 80)
-                        )
+                outputPlot <- plot_ly(
+                        data,
+                        x = ~as.Date(data$date),
+                        y = ~data$val,
+                        type = 'bar'
+                ) %>% layout( title = '',
+                        showlegend = FALSE,
+                        margin = list(l = 80, r = 80),
+                        xaxis = list(title = 'Datum'),
+                        yaxis = list(title = 'Schritte')
+                )
         }
         dev.off()
         outputPlot

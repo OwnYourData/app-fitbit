@@ -12,7 +12,7 @@ appStatus <- function(){
                        bsAlert('dataStatus'),
                        tabsetPanel(type='tabs',
                                    tabPanel('Schritte', br(),
-                                            plotlyOutput('lineChart')
+                                            plotlyOutput('barChart')
                                    )
                        )
                 )
