@@ -84,6 +84,58 @@ appStart <- function(){
         }
 }
 
+currDataSelection <- reactive({
+        closeAlert(session, 'myDataStatus')
+        data <- repoData(paste0(appKey, '.steps'))
+        if(nrow(data) == 0) {
+                createAlert(session, 'dataStatus', alertId = 'myDataStatus',
+                            style = 'warning', append = FALSE,
+                            title = 'Keine Daten im gewählten Zeitfenster',
+                            content = 'Für das ausgewählte Zeitfenster sind keine Daten vorhanden.')
+                data <- data.frame()
+        } else {
+                dataMin <- min(data$dat, na.rm=TRUE)
+                dataMax <- max(data$dat, na.rm=TRUE)
+                curMin <- as.Date(input$dateRange[1], '%d.%m.%Y')
+                curMax <- as.Date(input$dateRange[2], '%d.%m.%Y')
+                daterange <- seq(curMin, curMax, 'days')
+                data <- data[as.Date(data$date) %in% daterange, ]
+                if(nrow(data) == 0){
+                        createAlert(session, 'dataStatus', alertId = 'myDataStatus',
+                                    style = 'warning', append = FALSE,
+                                    title = 'Keine Daten im gewählten Zeitfenster',
+                                    content = 'Für das ausgewählte Zeitfenster sind keine Daten vorhanden.')
+                }
+        }
+        data
+})
+
+output$lineChart <- renderPlotly({
+        data <- currDataSelection()
+        pdf(NULL)
+        outputPlot <- plotly_empty()
+        data$val <- as.numeric(data$value)
+        if(nrow(data) > 0){
+                outputPlot <- plot_ly() %>%
+                        add_lines(x = as.Date(data$date),
+                                  y = data$val,
+                                  line=list(
+                                          width = 3,
+                                          shape = 'spline'),
+                                  name='') %>%
+                        add_markers(x = as.Date(data$date), 
+                                    y = data$val,
+                                    marker=list(color='blue'),
+                                    name='') %>%
+                        layout( title = '',
+                                showlegend = FALSE,
+                                margin = list(l = 80, r = 80)
+                        )
+        }
+        dev.off()
+        outputPlot
+})
+
 output$link_fitbit <- renderText({
         fitbit_key <- input$fitbit_key
         fitbit_secret <- input$fitbit_secret

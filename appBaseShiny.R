@@ -83,7 +83,8 @@ currData <- reactive({
         app <- currApp()
         if(length(app) > 0) {
                 url <- itemsUrl(app[['url']], 
-                                paste0(app[['app_key']]))
+                                paste0(app[['app_key']], 
+                                       '.steps'))
                 readItems(app, url)
         } else {
                 data.frame()

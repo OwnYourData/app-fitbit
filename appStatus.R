@@ -11,8 +11,8 @@ appStatus <- function(){
                        uiStatusDateSelect(),
                        bsAlert('dataStatus'),
                        tabsetPanel(type='tabs',
-                                   tabPanel('Tab1', br(),
-                                            p('hello world')
+                                   tabPanel('Schritte', br(),
+                                            plotlyOutput('lineChart')
                                    )
                        )
                 )

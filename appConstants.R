@@ -8,16 +8,16 @@ app_id <- 'eu.ownyourdata.fitbit'
 
 # definition of data structure
 currRepoSelect <- ''
-appRepos <- list(Vorlage = 'eu.ownyourdata.fitbit',
+appRepos <- list(Schritte = 'eu.ownyourdata.fitbit.steps',
                  Verlauf = 'eu.ownyourdata.fitbit.log')
 appStruct <- list(
-        Vorlage = list(
-                fields      = c('text'),
-                fieldKey    = 'text',
-                fieldTypes  = c('string'),
-                fieldInits  = c('empty'),
-                fieldTitles = c('Text'),
-                fieldWidths = c(600)),
+        Schritte = list(
+                fields      = c('date', 'value'),
+                fieldKey    = 'date',
+                fieldTypes  = c('date', 'integer'),
+                fieldInits  = c('empty', 'empty'),
+                fieldTitles = c('Datum', 'Schritte'),
+                fieldWidths = c(100, 100)),
         Verlauf = list(
                 fields      = c('date', 'description'),
                 fieldKey    = 'date',
