@@ -117,7 +117,7 @@ access_token<-httr::content(r)$access_token
 url<-itemsUrl(pia_url,'eu.ownyourdata.fitbit.steps')
 pia_data<-readItems(app,url)
 pia_data<-as.data.frame(lapply(pia_data,unlist))
-resp<-GET('https://api.fitbit.com/1/user/-/activities/steps/date/today/1m.json',httr::add_headers(.headers=defaultHeaders(access_token)))
+resp<-httr::GET('https://api.fitbit.com/1/user/-/activities/steps/date/today/1m.json',httr::add_headers(.headers=defaultHeaders(access_token)))
 fit_data<-jsonlite::fromJSON(httr::content(resp,as='text'))[[1]]
 if(nrow(fit_data)>0){
 colnames(fit_data)<-c('date','value')

@@ -62,25 +62,27 @@ appStart <- function(){
         
         # write script to collect Fitbit-Data used by scheduler ------
         app <- currApp()
-        scriptRepoUrl <- itemsUrl(app[['url']], scriptRepo)
-        scriptItems <- readItems(app, scriptRepoUrl)
-        schedulerFitbitScript <- scriptItems[
-                scriptItems$name == 'Fitbit Schritte', ]
-        if(nrow(schedulerFitbitScript) > 1){
-                lapply(schedulerFitbitScript$id,
-                       function(x) deleteItem(app, 
-                                              scriptRepoUrl,
-                                              as.character(x)))
-                schedulerFitbitScript <- data.frame()
-        }
-        scriptData <- list(name           = 'Fitbit Schritte',
-                           script         = fitbitStepScript,
-                           '_oydRepoName' = 'Fitbit-Skript')
-        if(nrow(schedulerFitbitScript) == 0){
-                writeItem(app, scriptRepoUrl, scriptData)
-        } else {
-                updateItem(app, scriptRepoUrl, scriptData,
-                           schedulerFitbitScript$id)
+        if(length(app)>0){
+                scriptRepoUrl <- itemsUrl(app[['url']], scriptRepo)
+                scriptItems <- readItems(app, scriptRepoUrl)
+                schedulerFitbitScript <- scriptItems[
+                        scriptItems$name == 'Fitbit Schritte', ]
+                if(nrow(schedulerFitbitScript) > 1){
+                        lapply(schedulerFitbitScript$id,
+                               function(x) deleteItem(app, 
+                                                      scriptRepoUrl,
+                                                      as.character(x)))
+                        schedulerFitbitScript <- data.frame()
+                }
+                scriptData <- list(name           = 'Fitbit Schritte',
+                                   script         = fitbitStepScript,
+                                   '_oydRepoName' = 'Fitbit-Skript')
+                if(nrow(schedulerFitbitScript) == 0){
+                        writeItem(app, scriptRepoUrl, scriptData)
+                } else {
+                        updateItem(app, scriptRepoUrl, scriptData,
+                                   schedulerFitbitScript$id)
+                }
         }
 }
 
@@ -165,8 +167,10 @@ output$link_fitbit <- renderText({
                         {
                                 insertUI(
                                         selector = '#disonnectFitbitPlaceholder',
-                                        ui = actionButton('disonnectFitbit', 'Verbindung zu Fitbit trennen', 
-                                                          icon('chain-broken'))
+                                        ui = tagList(actionButton('disonnectFitbit', 'Verbindung zu Fitbit trennen', 
+                                                          icon('chain-broken')),
+                                                     actionButton('importFitBit', 'Daten von Fitbit jetzt importieren',
+                                                                  icon('cloud-download')))
                                 )
                                 
                                 'erfolgreich mit Fitbit verbunden'
@@ -221,5 +225,54 @@ observeEvent(input$disonnectFitbit, {
                                 value = '')
                 removeUI(selector = 'div:has(> #disonnectFitbit)')
                 output$link_fitbit <- renderText('derzeit keine Verbindung zu Fitbit')
+        }
+})
+
+observeEvent(input$importFitBit, {
+        app<-setupApp(pia_url,app_key,app_secret)
+        fa_url<-itemsUrl(pia_url,'eu.ownyourdata.fitbit.token')
+        fa<-readItems(app,fa_url)
+        if(nrow(fa)==1){
+                key<-fa$key
+                secret<-fa$secret
+                headers<-c('Accept'='*/*','Content-Type'='application/x-www-form-urlencoded','Authorization'=paste('Basic',jsonlite::base64_enc(paste0(key,':',secret))))
+                r<-httr::POST('https://api.fitbit.com/oauth2/token',body=list(grant_type='refresh_token',refresh_token=fa$refresh_token),httr::add_headers(.headers=headers),encode='form')
+                data<-list(key=key,secret=secret,access_token=httr::content(r)$access_token,refresh_token=httr::content(r)$refresh_token)
+                updateItem(app,fa_url,data,fa$id)
+                access_token<-httr::content(r)$access_token
+                url<-itemsUrl(pia_url,'eu.ownyourdata.fitbit.steps')
+                pia_data<-readItems(app,url)
+                pia_data<-as.data.frame(lapply(pia_data,unlist))
+                resp<-httr::GET('https://api.fitbit.com/1/user/-/activities/steps/date/today/1m.json',httr::add_headers(.headers=defaultHeaders(access_token)))
+                fit_data<-jsonlite::fromJSON(httr::content(resp,as='text'))[[1]]
+                if(nrow(fit_data)>0){
+                        colnames(fit_data)<-c('date','value')
+                        if(nrow(pia_data)>0){
+                                df<-merge(pia_data,fit_data,by='date',all=TRUE)
+                        } else {
+                                df<-fit_data
+                                colnames(df)<-c('date','value.y')
+                        }
+                        df<-df[df$value.y>0,]
+                        if(nrow(df)>0){
+                                apply(df,1,function(x){
+                                        data<-list(date=as.character(x['date']),value=as.integer(x['value.y']),'_oydRepoName'='Schritte')
+                                        if(is.na(x['id'])){
+                                                writeItem(app,url,data)
+                                        } else {
+                                                updateItem(app,url,data,x['id'])
+                                        }
+                                })
+                                createAlert(session, 'urlStatus', alertId = 'myFitbitStatus',
+                                            style = 'success', append = TRUE,
+                                            title = 'Fitbit Import',
+                                            content = 'Daten wurden erfolgreich von Fitbit importiert.')
+                        } else {
+                                createAlert(session, 'urlStatus', alertId = 'myFitbitStatus',
+                                            style = 'info', append = TRUE,
+                                            title = 'Fitbit Import',
+                                            content = 'Es stehen keine neuen Daten zum Import bereit.')
+                        }
+                }
         }
 })
