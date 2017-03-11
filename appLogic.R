@@ -229,8 +229,8 @@ observeEvent(input$disonnectFitbit, {
 })
 
 observeEvent(input$importFitBit, {
-        app<-setupApp(pia_url,app_key,app_secret)
-        fa_url<-itemsUrl(pia_url,'eu.ownyourdata.fitbit.token')
+        app<-currApp()
+        fa_url<-itemsUrl(app[['url']],'eu.ownyourdata.fitbit.token')
         fa<-readItems(app,fa_url)
         if(nrow(fa)==1){
                 key<-fa$key
@@ -240,7 +240,7 @@ observeEvent(input$importFitBit, {
                 data<-list(key=key,secret=secret,access_token=httr::content(r)$access_token,refresh_token=httr::content(r)$refresh_token)
                 updateItem(app,fa_url,data,fa$id)
                 access_token<-httr::content(r)$access_token
-                url<-itemsUrl(pia_url,'eu.ownyourdata.fitbit.steps')
+                url<-itemsUrl(app[['url']],'eu.ownyourdata.fitbit.steps')
                 pia_data<-readItems(app,url)
                 pia_data<-as.data.frame(lapply(pia_data,unlist))
                 resp<-httr::GET('https://api.fitbit.com/1/user/-/activities/steps/date/today/1m.json',httr::add_headers(.headers=defaultHeaders(access_token)))
