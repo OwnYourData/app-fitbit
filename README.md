@@ -27,7 +27,7 @@ Starte den Container und verbinde Dich im Konfigurations-Dialog mit deinem Daten
 ### Installation am eigenen Computer/Laptop
 
 Um die Fitbit-App am eigenen Computer auszuführen, musst du zuerst [eine aktuelle Version von Docker installieren](https://www.docker.com/community-edition#/download). Starte dann die App mit folgendem Befehl:  
-`docker run -p 3838:3838 oydeu/app-energy`  
+`docker run -p 3838:3838 oydeu/app-fitbit`  
 Du kannst dann auf die App mit deinem Browser unter folgender Adresse zugreifen:  
 `http://192.168.99.100:3838`  
   
@@ -39,10 +39,10 @@ Du kannst dann auf die App mit deinem Browser unter folgender Adresse zugreifen:
 
 ### Installation am Raspberry Pi
 
-Die Energieverbrauch-App steht auch für die Architektur armhf zur Verfügung. Die Installation erfolgt dann wie am Computer/Laptop jedoch unter Verwendung des Docker Image `oydeu/app-fitbit_armhf`.  
+Die Fitbit-App steht auch für die Architektur armhf zur Verfügung. Die Installation erfolgt dann wie am Computer/Laptop jedoch unter Verwendung des Docker Image `oydeu/app-fitbit_armhf`.  
   
 *Anmerkungen:*  
-* Energieverbrauch am Dockerhub: https://hub.docker.com/r/oydeu/app-fitbit_armhf/  
+* Fitbit am Dockerhub: https://hub.docker.com/r/oydeu/app-fitbit_armhf/  
 * zur einfachen Installation von Docker am Raspberry empfehlen wir die SD-Card Images von Hypriot: http://blog.hypriot.com/downloads/
 * Befehl zum Start des Containers am Raspberry: `docker run -p 3838:3838 oydeu/app-fitbit_armhf`
 
@@ -69,7 +69,7 @@ Die folgenden Listen werden von der Fitbit-App verwendet:
 
 &nbsp;    
 
-## Verbessere die Energieverbrauch-App
+## Verbessere die Fitbit-App
 
 Bitte melde Fehler oder Vorschläge für neue Features / UX-Verbesserungen im [GitHub Issue-Tracker](https://github.com/OwnYourData/app-fitbit/issues) und halte dich dabei an die [Contributor Guidelines](https://github.com/twbs/ratchet/blob/master/CONTRIBUTING.md).
 
