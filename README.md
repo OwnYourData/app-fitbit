@@ -1,4 +1,4 @@
-# <img src="https://github.com/OwnYourData/app-fitbity/raw/master/www/app_logo.png" width="92"> Fitbit
+# <img src="https://github.com/OwnYourData/app-fitbit/raw/master/www/app_logo.png" width="92"> Fitbit
 Fitbit protokolliert dein tägliches Aktivitätsniveau. Behalte eine Kopie dieser zugrundeliegenden Daten und werte sie selber aus.  
 
 Mehr Infos, Screenshots und Demo: https://www.ownyourdata.eu/apps/fitbit/    
