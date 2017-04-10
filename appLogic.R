@@ -176,11 +176,11 @@ output$link_fitbit <- renderText({
                                 'erfolgreich mit Fitbit verbunden'
                         } else {
                                 # https://dev.fitbit.com/apps/oauthinteractivetutorial
-                                protocol <- session$clientData$url_protocol
+                                protocol <- gsub(':', '', session$clientData$url_protocol)
                                 hostname <- session$clientData$url_hostname
                                 fl <- paste0('https://www.fitbit.com/oauth2/authorize?',
                                              'response_type=code&',
-                                             'client_id=', as.character(input$fitbit_key), '&',
+                                             'client_id=', as.character(input$fitbit_key),
                                              '&redirect_uri=', 
                                              protocol,
                                              '%3A%2F%2F',
