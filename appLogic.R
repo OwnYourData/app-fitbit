@@ -206,7 +206,7 @@ output$link_fitbit <- renderText({
                         }
                         
                         # https://dev.fitbit.com/apps/oauthinteractivetutorial
-                        protocol <- session$clientData$url_protocol
+                        protocol <- gsub(':', '', session$clientData$url_protocol)
                         hostname <- session$clientData$url_hostname
                         fl <- paste0('https://www.fitbit.com/oauth2/authorize?',
                                      'response_type=code&',

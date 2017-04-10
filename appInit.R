@@ -98,13 +98,16 @@ observe({
                                      'Content-Type'    = 'application/x-www-form-urlencoded',
                                      'Authorization'   = paste('Basic',
                                                                jsonlite::base64_enc(paste0(key, ':', secret))))
+                        protocol <- gsub(':', '', session$clientData$url_protocol)
+                        hostname <- session$clientData$url_hostname
+                        ru <- paste0(protocol, '://', hostname)
                         # https://dev.fitbit.com/apps/oauthinteractivetutorial
                         r <- httr::POST('https://api.fitbit.com/oauth2/token',
                                         body = list(
                                                 code         = fitbit_code,
                                                 clientId     = key,
                                                 grant_type   = 'authorization_code',
-                                                redirect_uri = 'https://fitbit.datentresor.org'),
+                                                redirect_uri = ru),
                                         add_headers(.headers = headers),
                                         encode='form')
                         data <- list(
